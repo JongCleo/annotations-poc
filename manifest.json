@@ -18,7 +18,7 @@
   "content_scripts": [
     {
       "matches": ["https://*/*", "http://*/*"],
-      "js": ["socket.io.js", "scripts/content-script.js"],
+      "js": ["scripts/socket.io.js", "scripts/content-script.js"],
       "all_frames": true
     }
   ]
