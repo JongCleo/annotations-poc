@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "gmeet-canvas",
+  "description": "enable annotations on Google Meets",
+  "version": "1.0",
+  // "icons": {
+  //   "16": "",
+  //   "48": "",
+  //   "128": ""
+  // },
+  // "page_action": {
+  //   "default_icon": {
+  //     "16": "",
+  //     "48": "",
+  //     "128": ""
+  //   }
+  // },
+  "content_scripts": [
+    {
+      "matches": ["https://*/*", "http://*/*"],
+      "js": ["scripts/content-script.js"],
+      "all_frames": true
+    }
+  ]
+}
