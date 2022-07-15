@@ -12,7 +12,7 @@ chrome.webRequest.onCompleted.addListener(() => {
         (tabId = tab.id),
         (message = { type: "checkScreenShare" })
       );
-    }, 2000);
+    }, 3000);
   });
 }, web_filter);
 
@@ -27,5 +27,8 @@ chrome.runtime.onMessage.addListener((message) => {
         });
       });
     });
+  }
+  if (message.type === "keepAlive") {
+    console.log("keepAlive");
   }
 });

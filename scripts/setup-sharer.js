@@ -45,13 +45,13 @@ window.onmousemove = (e) => {
 io.on("receiveCursor", ({ x, y }) => {
   let new_x = x * ctx.canvas.width,
     new_y = y * ctx.canvas.height;
-  ctx.moveTo(new_x, new_y);
+  ctx.moveTo(new_x, new_y - 25);
 });
 io.on("receiveDraw", ({ x, y }) => {
-  let new_x = x * ctx.canvas.width,
-    new_y = y * ctx.canvas.height;
+  let new_x = Math.round(x * ctx.canvas.width),
+    new_y = Math.round(y * ctx.canvas.height);
   console.log("normalized x, y" + x + "," + y);
   console.log("new x, y" + new_x + "," + new_y);
-  ctx.lineTo(new_x, new_y);
+  ctx.lineTo(new_x, new_y - 25);
   ctx.stroke();
 });

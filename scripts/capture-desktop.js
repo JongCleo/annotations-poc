@@ -12,12 +12,27 @@ const setupCanvas = () => {
   });
 };
 
+const normalizeCanvasCoords = (x, y) => {
+  x = (x - boundingBox.left) / ctx.canvas.width;
+  y = (y - boundingBox.top) / ctx.canvas.height;
+  return { norm_x: x, norm_y: y };
+};
+
 const setupWatcherActions = () => {
-  let screen_share_element =
-    document.getElementsByTagName("video")[0].parentElement.parentElement;
+  console.log("setting up watcher actions");
+  let screen_share_element;
+  for (let video of document.getElementsByTagName("video")) {
+    if (video.style.display != "none") {
+      screen_share_element = video.parentElement;
+      console.log("found the screenshare");
+      break;
+    }
+  }
+
   canvas.width = screen_share_element.clientWidth;
   canvas.height = screen_share_element.clientHeight;
-  screen_share_element.appendChild(canvas);
+  screen_share_element.parentElement.appendChild(canvas);
+  boundingBox = canvas.getBoundingClientRect();
 
   let x;
   let y;
@@ -34,8 +49,7 @@ const setupWatcherActions = () => {
 
   window.onmousedown = (e) => {
     ctx.moveTo(x, y);
-    let norm_x = x / ctx.canvas.width,
-      norm_y = y / ctx.canvas.height;
+    let { norm_x, norm_y } = normalizeCanvasCoords(x, y);
     console.log("old x, y" + x + "," + y);
     console.log("normalized x, y" + norm_x + "," + norm_y);
     io.emit("sendCursor", { norm_x, norm_y });
@@ -46,15 +60,12 @@ const setupWatcherActions = () => {
     mouseDown = false;
   };
   window.onmousemove = (e) => {
-    x = e.clientX;
-    y = e.clientY;
+    x = e.clientX - boundingBox.left;
+    y = e.clientY - boundingBox.top;
     if (mouseDown && drawing_mode) {
-      let norm_x = x / ctx.canvas.width,
-        norm_y = y / ctx.canvas.height;
+      let { norm_x, norm_y } = normalizeCanvasCoords(x, y);
+
       io.emit("sendDraw", { norm_x, norm_y });
-      ctx.lineTo(x, y);
-      ctx.stroke();
-      // assuming little latency, immediately erase the stroke
     }
   };
 };
@@ -64,19 +75,19 @@ const setupWatcherActions = () => {
 // GLOBALS
 let canvas;
 let ctx;
+let boundingBox;
 var io = io.connect("http://localhost:8080");
 setupCanvas();
 io.on("receiveScreenShareEvent", () => {
   setupWatcherActions();
 });
 
+chrome.runtime.sendMessage({ type: "keepAlive" });
 chrome.runtime.onMessage.addListener((message) => {
   if (message.type === "checkScreenShare") {
-    console.log("received event in the right fukin tab");
     if (document.body.innerHTML.search("You're presenting to everyone") >= 0) {
       console.log("Seting up Screen Sharer's drawing capability");
       chrome.runtime.sendMessage({ type: "setupSharerCanvases" });
-      // setupSharerActions();
       console.log("Seting up canvases for other call participants...");
       io.emit("sendScreenShareEvent");
     }

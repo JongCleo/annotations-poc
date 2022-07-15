@@ -21,13 +21,13 @@ io.on("connect", (socket) => {
 
   socket.on("sendDraw", (data) => {
     screen_sharer_tabs.map((tab) => {
-      io.to(tab).emit("receiveDraw", { x: data.x, y: data.y });
+      io.to(tab).emit("receiveDraw", { x: data.norm_x, y: data.norm_y });
     });
   });
 
   socket.on("sendCursor", (data) => {
     screen_sharer_tabs.map((tab) => {
-      io.to(tab).emit("receiveCursor", { x: data.x, y: data.y });
+      io.to(tab).emit("receiveCursor", { x: data.norm_x, y: data.norm_y });
     });
   });
 
