@@ -1,73 +1,31 @@
-chrome.action.onClicked.addListener((tab) => {
-  // needs to be var for w.e reason
-  var io = io.connect("http://localhost:8080");
+// chrome://inspect/#service-workers
+const web_filter = {
+  urls: ["https://meet.google.com/*/CreateMeetingDevice"],
+};
 
-  console.log("Injecting Canvas for Screen Sharer");
-
-  chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    files: [
-      ["socket.io.js", setupCanvas, setupIOSends(io), setupIOReceives(io)],
-    ],
+chrome.webRequest.onCompleted.addListener(() => {
+  // Detecting a Screen Share is a convoluted PIA
+  // the webRequest API tells us half the story, but the on-page js need to confirm
+  chrome.tabs.query({ url: ["https://meet.google.com/*"] }, ([tab]) => {
+    setTimeout(() => {
+      chrome.tabs.sendMessage(
+        (tabId = tab.id),
+        (message = { type: "checkScreenShare" })
+      );
+    }, 2000);
   });
+}, web_filter);
+
+chrome.runtime.onMessage.addListener((message) => {
+  if (message.type === "setupSharerCanvases") {
+    console.log("propagating script to all tabs");
+    chrome.tabs.query({}, (tabs) => {
+      tabs.map((tab, idx) => {
+        chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: ["scripts/socket.io.js", "scripts/setup-sharer.js"],
+        });
+      });
+    });
+  }
 });
-
-const setupCanvas = () => {
-  let canvas = document.createElement("canvas");
-  canvas.id = "canvas";
-  canvas.style.position = "absolute";
-  canvas.style.left = "0px";
-  canvas.style.top = "0px";
-  canvas.style.zIndex = "5";
-  canvas.style.pointerEvents = "none";
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  document.body.appendChild(canvas);
-};
-
-const setupIOSends = (io) => {
-  let ctx = canvas.getContext("2d", {
-    alpha: true,
-  });
-  let x;
-  let y;
-  let mouseDown = false;
-  let drawing_mode = false;
-
-  window.onkeydown = (e) => {
-    drawing_mode = e.key == "d" ? true : false;
-  };
-
-  window.onkeyup = (e) => {
-    drawing_mode = e.key == "d" ? false : true;
-  };
-
-  window.onmousedown = (e) => {
-    ctx.moveTo(x, y);
-    io.emit("sendCursor", { x, y });
-    mouseDown = true;
-  };
-
-  window.onmouseup = (e) => {
-    mouseDown = false;
-  };
-  window.onmousemove = (e) => {
-    x = e.clientX;
-    y = e.clientY;
-    if (mouseDown && drawing_mode) {
-      io.emit("sendDraw", { x, y });
-      ctx.lineTo(x, y);
-      ctx.stroke();
-    }
-  };
-};
-
-const setupIOReceives = (io) => {
-  io.on("receiveCursor", ({ x, y }) => {
-    ctx.moveTo(x, y);
-  });
-  io.on("receiveDraw", ({ x, y }) => {
-    ctx.lineTo(x, y);
-    ctx.stroke();
-  });
-};

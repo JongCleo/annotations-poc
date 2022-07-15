@@ -13,23 +13,31 @@ const io = new Server(httpServer, {
 });
 
 let connections = [];
-let screen_sharer;
+let screen_sharer_tabs = [];
 
 io.on("connect", (socket) => {
   connections.push(socket);
   console.log(`${socket.id} has connected`);
 
   socket.on("sendDraw", (data) => {
-    io.to(screen_sharer).emit("receiveDraw", { x: data.x, y: data.y });
+    screen_sharer_tabs.map((tab) => {
+      io.to(tab).emit("receiveDraw", { x: data.x, y: data.y });
+    });
   });
 
   socket.on("sendCursor", (data) => {
-    io.to(screen_sharer).emit("receiveCursor", { x: data.x, y: data.y });
+    screen_sharer_tabs.map((tab) => {
+      io.to(tab).emit("receiveCursor", { x: data.x, y: data.y });
+    });
   });
 
   socket.on("sendScreenShareEvent", (data) => {
-    screen_sharer = socket.id;
+    screen_sharer_tabs.push(socket.id);
     socket.broadcast.emit("receiveScreenShareEvent");
+  });
+
+  socket.on("addScreenShareTab", () => {
+    screen_sharer_tabs.push(socket.id);
   });
 
   socket.on("disconnect", (reason) => {

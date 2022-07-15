@@ -16,13 +16,14 @@
   //     "128": ""
   //   }
   // },
-  // "background": {
-  //   "service_worker": "scripts/background.js"
-  // },
+  "background": {
+    "service_worker": "scripts/background.js"
+  },
   "content_scripts": [
     {
       "matches": ["https://meet.google.com/*"],
       "js": ["scripts/socket.io.js", "scripts/capture-desktop.js"]
     }
-  ]
+  ],
+  "permissions": ["webRequest", "tabs", "scripting"]
 }
