@@ -2,27 +2,34 @@ import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 
+// app is a fn designed to be an http request listener
+// it is passed (req,res) on incoming requests
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: "https://meet.google.com",
+    origin: "*",
   },
-  // transports: ["websocket"],
 });
 
 let connections = [];
+let screen_sharer;
 
 io.on("connect", (socket) => {
   connections.push(socket);
   console.log(`${socket.id} has connected`);
 
   socket.on("sendDraw", (data) => {
-    socket.broadcast.emit("receiveDraw", { x: data.x, y: data.y });
+    io.to(screen_sharer).emit("receiveDraw", { x: data.x, y: data.y });
   });
 
   socket.on("sendCursor", (data) => {
-    socket.broadcast.emit("receiveCursor", { x: data.x, y: data.y });
+    io.to(screen_sharer).emit("receiveCursor", { x: data.x, y: data.y });
+  });
+
+  socket.on("sendScreenShareEvent", (data) => {
+    screen_sharer = socket.id;
+    socket.broadcast.emit("receiveScreenShareEvent");
   });
 
   socket.on("disconnect", (reason) => {
