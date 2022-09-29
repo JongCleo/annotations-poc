@@ -1,4 +1,5 @@
 ## A proof of concept for an annotations feature on Google Meets
+You know, the thing where you can draw stuff the screen sharer's screen.
 
 ### Demo
 
