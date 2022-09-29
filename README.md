@@ -1,3 +1,6 @@
-A proof of concept for an annotations feature on Google Meets
+## A proof of concept for an annotations feature on Google Meets
 
-[Boilerplate Reference](https://github.com/EmailThis/extension-boilerplate/tree/master/src/scripts)
+### Learnings/Technologies
+- Chrome Manifest V3
+- Some socket.js stuff
+- HTML Canvases
